@@ -1,0 +1,14 @@
+{
+  "name": "ERC777-AirDrop",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "parcel ./src/bulkSender/index.html"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.6.0"
+  },
+  "devDependencies": {
+    "parcel": "^2.6.0"
+  }
+
+}
