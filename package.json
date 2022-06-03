@@ -8,7 +8,7 @@
     "@openzeppelin/contracts": "^4.6.0"
   },
   "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.15",
     "parcel": "^2.6.0"
   }
-
 }

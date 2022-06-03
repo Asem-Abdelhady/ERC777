@@ -66,7 +66,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -84,7 +85,8 @@
       "name": "send",
       "outputs": [],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     }
   ],
   "metadata": "{\"compiler\":{\"version\":\"0.8.13+commit.abaa5c0e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"holder\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"pricePerToken\",\"type\":\"uint256\"}],\"name\":\"PricePerToken\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"contract IERC777\",\"name\":\"_token\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_holder\",\"type\":\"address\"}],\"name\":\"getPricePerToken\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IERC777\",\"name\":\"_token\",\"type\":\"address\"},{\"internalType\":\"address payable\",\"name\":\"_holder\",\"type\":\"address\"}],\"name\":\"send\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IERC777\",\"name\":\"_token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_pricePerToken\",\"type\":\"uint256\"}],\"name\":\"setPricePerToken\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"title\":\"FixedPriceSeller        An ERC777 token operator contract that sells tokens at a fixed price.\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"getPricePerToken(address,address)\":{\"notice\":\"Get the price for each token.  The price is in Wei, so if for example the price is 1 Ether for 1 token this would return 10^18.\"},\"send(address,address)\":{\"notice\":\"Send tokens from a holder at their price\"},\"setPricePerToken(address,uint256)\":{\"notice\":\"Set the price for each token.  The price is in Wei, so if for example the price is 1 Ether for 1 token then _pricePerToken would be 10^18.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/StaticSale.sol\":\"StaticSale\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC777/IERC777.sol\":{\"keccak256\":\"0x093eaf9a4b05adf2bd3730b753f9e1725ed34b80ea4b5f08477ff2f46a188586\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://46e9a9b37e8cb6332ed21a8d3f8a6723d897e4a97db63095424522a80b3cfc15\",\"dweb:/ipfs/QmdHcBPPGKQBnmeaAN3Y6YKUPqwR73RrHTiX5uTr6eVx1M\"]},\"@openzeppelin/contracts/utils/math/SafeMath.sol\":{\"keccak256\":\"0x0f633a0223d9a1dcccfcf38a64c9de0874dfcbfac0c6941ccf074d63a2ce0e1e\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://864a40efcffdf408044c332a5aa38ec5618ed7b4eecb8f65faf45671bd6cdc65\",\"dweb:/ipfs/QmQJquTMtc6fgm5JQzGdsGpA2fqBe3MHWEdt2qzaLySMdN\"]},\"project:/contracts/StaticSale.sol\":{\"keccak256\":\"0xb8b26ae455d52c5124b2e67f6ead1cce0c5df41c8f1e2d94f807b24ff6da7f01\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://0babec218a1cf2e74429e24c0b8463c3870736d866713264542770c730c03802\",\"dweb:/ipfs/QmQKXuhrTyzMDmJqg8MwmNaU17dJjaQSFViPqTG3TpZR5a\"]}},\"version\":1}",
@@ -7845,9 +7847,17 @@
     "name": "solc",
     "version": "0.8.13+commit.abaa5c0e.Emscripten.clang"
   },
-  "networks": {},
+  "networks": {
+    "5777": {
+      "events": {},
+      "links": {},
+      "address": "0xfD2CdE2892e0292e96C186037610451223501B95",
+      "transactionHash": "0x8dc19d8cda3477a2a365e0de1616bc5259fefc1ab4550ab6033a357ab30ab639"
+    }
+  },
   "schemaVersion": "3.4.7",
-  "updatedAt": "2022-06-01T18:03:36.680Z",
+  "updatedAt": "2022-06-03T19:44:17.698Z",
+  "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
     "methods": {},
