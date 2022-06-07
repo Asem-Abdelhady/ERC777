@@ -5,7 +5,8 @@
     "start": "parcel ./src/bulkSender/index.html"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.6.0"
+    "@openzeppelin/contracts": "^4.6.0",
+    "@truffle/hdwallet-provider": "^2.0.8"
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.15",
