@@ -5,8 +5,9 @@ import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 
 contract ERC777AT is ERC777 {
     constructor(
+        uint256 initialSupply,
         address[] memory defaultOperators
     ) ERC777("AsemToken", "AT", defaultOperators) {
-        _mint(msg.sender, 10000 * 10 ** 18, "", "");
+        _mint(msg.sender, initialSupply, "", "");
     }
 }

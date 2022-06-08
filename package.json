@@ -10,6 +10,8 @@
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.15",
-    "parcel": "^2.6.0"
+    "ganache": "^7.2.0",
+    "parcel": "^2.6.0",
+    "web3": "^1.7.3"
   }
 }
