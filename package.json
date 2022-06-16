@@ -2,16 +2,17 @@
   "name": "ERC777-AirDrop",
   "version": "1.0.0",
   "scripts": {
-    "start": "parcel ./src/bulkSender/index.html"
+    "start": "react-app-rewired start"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.6.0",
-    "@truffle/hdwallet-provider": "^2.0.8"
+    "@truffle/hdwallet-provider": "^2.0.8",
+    "bootstrap": "^5.1.3",
+    "react-bootstrap": "^2.4.0"
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.15",
     "ganache": "^7.2.0",
-    "parcel": "^2.6.0",
     "web3": "^1.7.3"
   }
 }
