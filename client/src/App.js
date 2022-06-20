@@ -4,28 +4,44 @@ import Web3 from "web3";
 import {ERC777AT_ADDRESS, ERC777AT_ABI} from "./config";
 
 
-class accountInput extends Component {
-
-}
-
-class accountsListItem extends Component {
-    render() {
-        return (
-            <div>
-                <span>{this.props.value}</span>
-                <button onClick={(i) => this.props.onClick(i)}></button>
-            </div>
-        )
+class AccountInput extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {value: ''};
     }
 
-}
-
-class accountsList extends Component {
 
     render() {
-        return(
-            <ul>
+        return (
+            <form onSubmit={this.props.onSubmit}>
+                <div className="input-group mb-3">
+                    <input type="text" className="form-control" placeholder="Enter account"
+                           aria-label="Enter account" aria-describedby="button-addon2" id="account-input"
+                           onChange={this.props.onChange}></input>
+                    <button className="btn btn-outline-primary" type="submit" id="button-addon2">Save
+                    </button>
+                </div>
+            </form>
+        )
+    }
+}
 
+class AccountsList extends Component {
+    constructor(props) {
+        super(props);
+    }
+
+
+    render() {
+        return (
+            <ul className="list-group">
+                {this.props.accounts.map((account, index) =>
+                    <li className="list-group-item d-flex justify-content-between align-items-start" key={index}>
+                        {account}
+                        <span className="badge bg-primary square" style={{cursor: "pointer"}}
+                              onClick={() => this.props.onClick(index)}>X</span>
+                    </li>
+                )}
             </ul>
         )
     }
@@ -34,23 +50,23 @@ class accountsList extends Component {
 
 function Proceed(props) {
     return (
-        <button onClick={props.onClick}>props.value</button>
+        <button className="btn btn-secondary" style={{marginLeft: "12px"}} onClick={props.onClick}>PROCEED</button>
     )
 }
 
 function ExtractCSV(props) {
     return (
-        <button onClick={props.onClick}>props.value</button>
+        <button className="btn btn-primary" onClick={props.onClick}>EXTRACTCSV</button>
     )
 
 }
 
-class accountsButtons extends Component {
+class AccountsButtons extends Component {
     render() {
         return (
-            <div>
-                <ExtractCSV value={"EXTRACTCSV"} onClick={() => this.props.onClick}/>
-                <Proceed value={"PROCEED"} onClick={() => this.props.onClick}/>
+            <div style={{marginTop: "12px"}}>
+                <ExtractCSV onClick={() => this.props.onHandleProceed}/>
+                <Proceed onClick={() => this.props.onHandleProceed}/>
             </div>
         )
     }
@@ -60,36 +76,81 @@ class accountsButtons extends Component {
 class App extends Component {
     constructor(props) {
         super(props);
-        this.state = {account: ""};
+        this.web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+        this.state = {
+            personalAccount: ''
+            , accountsList: [],
+            input: ''
+        };
+    }
+
+    componentDidMount() {
         this.loadBlockChainData();
     }
 
+    async onHandleRemoveAccount(accountIndex) {
+
+        let accounts = this.state.accountsList.filter((value, index) => index !== accountIndex);
+
+        await this.setState({accountsList: accounts});
+        console.log(this.state.accountsList);
+
+
+    }
+
+    onHandleInput(event) {
+        this.setState({input: event.target.value});
+        console.log("input state: " + this.state.input);
+    }
+
+    onHandleSubmit(event) {
+        event.preventDefault();
+        const input = this.state.input;
+        if (!(this.web3.utils.isAddress(input))) {
+            //Do something
+            console.log("Not valid");
+            return;
+        }
+
+        let accounts = this.state.accountsList;
+        accounts.push(input);
+        this.setState({accountsList: accounts});
+
+    }
+
+    onHandleExtractCSV() {
+
+    }
+
+    onHandleProceed() {
+
+    }
+
+
     async loadBlockChainData() {
-        const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
-        const network = await web3.eth.net.getNetworkType();
-        const accounts = await web3.eth.getAccounts();
-        this.setState({account: accounts[0]})
-        const erc777AT = new web3.eth.Contract(ERC777AT_ABI, ERC777AT_ADDRESS);
-        const defaultOperators = await erc777AT.methods.defaultOperators().call();
-        console.log("type of: ", typeof (defaultOperators.length));
+        const accounts = await this.web3.eth.getAccounts();
+        await this.setState({personalAccount: accounts[0]})
+        const erc777AT = new this.web3.eth.Contract(ERC777AT_ABI, ERC777AT_ADDRESS);
+        console.log("account: " + this.state.personalAccount);
     }
 
     render() {
         return (
-            <div className="App">
-                <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+            <div>
+                <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow p-2">
                     <a className="navbar-brand col-sm-3 col-md-2 mr-0"
                        href="https://github.com/Asem-Abdelhady/ERC777-AirDrop" target="_blank">ERC777AT | Bulksend
                         ERC777AT tokens</a>
-                    <ul className="navbar-nav px-3">
-                        <li className="nav-item text-nowrap d-none d-sm-none d-sm-block">
-                            <small><a className="nav-link" href="#"><span id="account"></span></a></small>
-                        </li>
-                    </ul>
+                    <span className="d-flex text-white">{this.state.personalAccount}</span>
                 </nav>
-                <div className="row">
-                    <main role="main" className="col-lg-12 d-flex justify-content-center">
-
+                <div>
+                    <main style={{margin: "auto", marginTop: "120px", width: "500px"}}>
+                        <AccountInput onChange={event => this.onHandleInput(event)}
+                                      onSubmit={event => this.onHandleSubmit(event)}/>
+                        <AccountsList accounts={this.state.accountsList}
+                                      onClick={index => this.onHandleRemoveAccount(index)}/>
+                        <AccountsButtons onHandleProceed={this.onHandleProceed()}
+                                         onHandleProcess={this.onHandleProceed()}/>
                     </main>
                 </div>
             </div>
