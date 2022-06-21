@@ -1,6 +1,7 @@
 export const ERC777AT_ADDRESS = '0x47e5b010ba6E6341F2A500a12a3c70245AE00a52'
+export const BULKSENDER_ADDRESS = '0xfd5C553b70dfccC29a9755735311B8DAAaC15305'
 
-export const ERC777AT_ABI =  [
+export const ERC777AT_ABI = [
     {
         "inputs": [
             {
@@ -578,6 +579,64 @@ export const ERC777AT_ABI =  [
                 "type": "bool"
             }
         ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
+export const BULKSENDER_ABI = [
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC777",
+                "name": "_token",
+                "type": "address"
+            },
+            {
+                "internalType": "address[]",
+                "name": "_recipients",
+                "type": "address[]"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes",
+                "name": "_data",
+                "type": "bytes"
+            }
+        ],
+        "name": "send",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC777",
+                "name": "_token",
+                "type": "address"
+            },
+            {
+                "internalType": "address[]",
+                "name": "_recipients",
+                "type": "address[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "_amounts",
+                "type": "uint256[]"
+            },
+            {
+                "internalType": "bytes",
+                "name": "_data",
+                "type": "bytes"
+            }
+        ],
+        "name": "sendAmounts",
+        "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     }
