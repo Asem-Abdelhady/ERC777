@@ -1,7 +1,8 @@
 import './App.css';
 import React, {Component, useState} from "react";
 import Web3 from "web3";
-import {ERC777AT_ADDRESS,ERC777AT_ABI, BULKSENDER_ABI, BULKSENDER_ADDRESS} from "./config";
+import {ERC777AT_ADDRESS, ERC777AT_ABI, BULKSENDER_ABI, BULKSENDER_ADDRESS} from "./config";
+import shikamaru from './loading.jpg'
 import {Button, Modal} from "react-bootstrap";
 
 function NotValidAccountModal(props) {
@@ -14,11 +15,10 @@ function NotValidAccountModal(props) {
         >
             <Modal.Header closeButton>
                 <Modal.Title id="contained-modal-title-vcenter">
-                    Modal heading
+                    Invalid Account !
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <h4>Centered Modal</h4>
                 <p>
                     The account you entered is not valid, please enter a valid one!
                 </p>
@@ -30,10 +30,18 @@ function NotValidAccountModal(props) {
     );
 }
 
+function Loading(props) {
+    return (
+        <div id="loader" className="text-center">
+            <img src={shikamaru} alt="Shikamaru is dying but the transaction is being processed!" style={{margin:"30px"}}/>
+            <p className="text-center">Loading the transaction nenjtsu !</p>
+        </div>
+    )
+}
+
 class AccountInput extends Component {
     constructor(props) {
         super(props);
-        this.state = {value: ''};
     }
 
 
@@ -43,7 +51,7 @@ class AccountInput extends Component {
                 <div className="input-group mb-3">
                     <input type="text" className="form-control" placeholder="Enter account"
                            aria-label="Enter account" aria-describedby="button-addon2" id="account-input"
-                           onChange={this.props.onChange}></input>
+                           onChange={this.props.onChange} value={this.props.input}></input>
                     <button className="btn btn-outline-primary" type="submit" id="button-addon2">Save
                     </button>
                 </div>
@@ -53,12 +61,8 @@ class AccountInput extends Component {
 }
 
 function AccountsList(props) {
-    //
-    // const [modalShow, setModalShow] = React.useState(false);
-    // if(!props.isAccount) setModalShow(true)
-    // console.log(props.isAccount);
     return (
-        <ul className="list-group" style={{marginBottom:"12px"}}>
+        <ul className="list-group" style={{marginBottom: "12px"}}>
             {props.accounts.map((account, index) =>
                 <li className="list-group-item d-flex justify-content-between align-items-start" key={index}>
                     {account}
@@ -103,6 +107,8 @@ class App extends Component {
             accountsList: [],
             input: '',
             isValidInput: true,
+            modalShow: false,
+            loading: false
         };
     }
 
@@ -131,13 +137,14 @@ class App extends Component {
         const input = this.state.input;
         if (!(this.web3.utils.isAddress(input))) {
             this.setState({isValidInput: false});
+            this.setState({modalShow: true});
         } else {
             this.setState({isValidInput: true});
             let accounts = this.state.accountsList;
             accounts.push(input);
             this.setState({accountsList: accounts});
-
         }
+        this.setState({input: ''});
 
     }
 
@@ -145,54 +152,63 @@ class App extends Component {
 
     }
 
+    makeTransaction(balance, i) {
+        console.log("Account " + i + " balance: " + balance);
+        const emptyAccountsList = [];
+        this.setState({accountsList: emptyAccountsList});
+        this.setState({loading:false});
+    }
+
     async onHandleProceed(event) {
         let accountsList = this.state.accountsList;
-        console.log("Address 0: " + accountsList[0] + "-------- type of: "+  typeof (accountsList[0]));
-        await this.bulkSender.methods.send(ERC777AT_ADDRESS, accountsList, 100, 1).send({from: this.personalAccount})
+        console.log("Address 0: " + accountsList[0] + "-------- type of: " + typeof (accountsList[0]));
+        this.setState({loading:true});
+        this.bulkSender.methods.send(ERC777AT_ADDRESS, accountsList, 20, 1).send({from: this.personalAccount})
             .once('receipt', (receipt) => {
-                for(var i = 0; i < accountsList.length; i++){
-                    console.log("From once Account " + i + " balance: " + this.erc777AT.methods.balanceOf(accountsList[i]).call());
+                for (let i = 0; i < accountsList.length; i++) {
+                    this.erc777AT.methods.balanceOf(accountsList[i]).call().then((balance) => this.makeTransaction(balance, i));
                 }
             });
-        for(var i = 0; i < accountsList.length; i++){
-            console.log("Outside once Account " + i + " balance: " + this.erc777AT.methods.balanceOf(accountsList[i]).call());
-        }
-
-     }
+    }
 
 
     async loadBlockChainData() {
         this.accounts = await this.web3.eth.getAccounts();
-        console.log("length = "  + this.accounts.length);
+        console.log("length = " + this.accounts.length);
         this.personalAccount = this.accounts[0];
+        this.setState({personalAccount:this.personalAccount});
         this.erc777AT = new this.web3.eth.Contract(ERC777AT_ABI, ERC777AT_ADDRESS);
-        this.bulkSender = new this.web3.eth.Contract(BULKSENDER_ABI,BULKSENDER_ADDRESS);
-         console.log("Personal Account " +  this.personalAccount);
+        this.bulkSender = new this.web3.eth.Contract(BULKSENDER_ABI, BULKSENDER_ADDRESS);
+        console.log("Personal Account " + this.personalAccount);
         const balance = await this.erc777AT.methods.balanceOf(this.personalAccount).call();
-        console.log("The balance is : "+balance);
+        console.log("The balance is : " + balance);
     }
 
     render() {
         return (
-            <div>
-                <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow p-2">
-                    <a className="navbar-brand col-sm-3 col-md-2 mr-0"
-                       href="https://github.com/Asem-Abdelhady/ERC777-AirDrop" target="_blank">ERC777AT | Bulksend
-                        ERC777AT tokens</a>
-                    <span className="d-flex text-white">{this.state.personalAccount}</span>
-                </nav>
+            !this.state.loading ?
                 <div>
-                    <main style={{margin: "auto", marginTop: "120px", width: "500px"}}>
-                        <AccountInput onChange={event => this.onHandleInput(event)}
-                                      onSubmit={event => this.onHandleSubmit(event)}/>
-                        <AccountsList accounts={this.state.accountsList}
-                                      onClick={index => this.onHandleRemoveAccount(index)}
-                                      isAccount={this.state.isValidInput}/>
-                        <ExtractCSV onClick={event => this.onHandleExtractCSV()}/>
-                        <Proceed onClick={event => this.onHandleProceed(event)}/>
-                    </main>
-                </div>
-            </div>
+                    <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow p-2">
+                        <a className="navbar-brand col-sm-3 col-md-2 mr-0"
+                           href="https://github.com/Asem-Abdelhady/ERC777-AirDrop" target="_blank">ERC777AT | Bulksend
+                            ERC777AT tokens</a>
+                        <span className="d-flex text-white">{this.state.personalAccount}</span>
+                    </nav>
+                    <div>
+                        <main style={{margin: "auto", marginTop: "120px", width: "500px"}}>
+                            <AccountInput onChange={event => this.onHandleInput(event)}
+                                          onSubmit={event => this.onHandleSubmit(event)}
+                                          input={this.state.input}/>
+                            <AccountsList accounts={this.state.accountsList}
+                                          onClick={index => this.onHandleRemoveAccount(index)}
+                                          isAccount={this.state.isValidInput}/>
+                            <ExtractCSV onClick={event => this.onHandleExtractCSV()}/>
+                            <Proceed onClick={event => this.onHandleProceed(event)}/>
+                        </main>
+                    </div>
+                    <NotValidAccountModal show={this.state.modalShow}
+                                          onHide={() => this.setState({modalShow: false})}/>
+                </div> : <Loading/>
         );
     }
 }
