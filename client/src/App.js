@@ -1,11 +1,12 @@
 import './App.css';
-import React, {Component, useState} from "react";
+import React, {Component} from "react";
 import Web3 from "web3";
-import {ERC777AT_ADDRESS, ERC777AT_ABI, BULKSENDER_ABI, BULKSENDER_ADDRESS} from "./config";
+import {BULKSENDER_ABI, BULKSENDER_ADDRESS, ERC777AT_ABI, ERC777AT_ADDRESS} from "./config";
 import shikamaru from './loading.jpg'
 import {Button, Modal} from "react-bootstrap";
 
-function NotValidAccountModal(props) {
+
+function TransactionSucceededModal(props) {
     return (
         <Modal
             {...props}
@@ -15,7 +16,57 @@ function NotValidAccountModal(props) {
         >
             <Modal.Header closeButton>
                 <Modal.Title id="contained-modal-title-vcenter">
-                    Invalid Account !
+                    Transaction succeeded!
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>
+                    You made a successful transaction, the account balance is now {props.balance} tokens.
+                </p>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button onClick={props.onHide}>Close</Button>
+            </Modal.Footer>
+        </Modal>
+    );
+}
+
+function TransactionFailedModal(props) {
+    return (
+        <Modal
+            {...props}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+        >
+            <Modal.Header closeButton>
+                <Modal.Title id="contained-modal-title-vcenter">
+                    Transaction failed!
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>
+                    The transaction is either rejected or failed to be mined, please try again.
+                </p>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button onClick={props.onHide}>Close</Button>
+            </Modal.Footer>
+        </Modal>
+    );
+}
+
+function InvalidAccountModal(props) {
+    return (
+        <Modal
+            {...props}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+        >
+            <Modal.Header closeButton>
+                <Modal.Title id="contained-modal-title-vcenter">
+                    Invalid Account!
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -33,7 +84,8 @@ function NotValidAccountModal(props) {
 function Loading(props) {
     return (
         <div id="loader" className="text-center">
-            <img src={shikamaru} alt="Shikamaru is dying but the transaction is being processed!" style={{margin:"30px"}}/>
+            <img src={shikamaru} alt="Shikamaru is dying but the transaction is being processed!"
+                 style={{margin: "30px"}}/>
             <p className="text-center">Loading the transaction nenjtsu !</p>
         </div>
     )
@@ -106,8 +158,10 @@ class App extends Component {
         this.state = {
             accountsList: [],
             input: '',
-            isValidInput: true,
-            modalShow: false,
+            invalidAccountModalShow: false,
+            transactionFailedModalShow: false,
+            transactionSucceededModalShow: false,
+            personalAccountBalance: 0,
             loading: false
         };
     }
@@ -122,8 +176,6 @@ class App extends Component {
         let accounts = this.state.accountsList.filter((value, index) => index !== accountIndex);
 
         await this.setState({accountsList: accounts});
-        console.log(this.state.accountsList);
-
 
     }
 
@@ -136,10 +188,8 @@ class App extends Component {
         event.preventDefault();
         const input = this.state.input;
         if (!(this.web3.utils.isAddress(input))) {
-            this.setState({isValidInput: false});
-            this.setState({modalShow: true});
+            this.setState({invalidAccountModalShow: true});
         } else {
-            this.setState({isValidInput: true});
             let accounts = this.state.accountsList;
             accounts.push(input);
             this.setState({accountsList: accounts});
@@ -152,35 +202,43 @@ class App extends Component {
 
     }
 
-    makeTransaction(balance, i) {
-        console.log("Account " + i + " balance: " + balance);
+    async afterTransactionSucceeded() {
         const emptyAccountsList = [];
         this.setState({accountsList: emptyAccountsList});
-        this.setState({loading:false});
+        this.setState({loading: false});
+        const balance = await this.erc777AT.methods.balanceOf(this.personalAccount).call();
+        this.setState({personalAccountBalance: balance});
+        console.log("Personal account balance: " + this.state.personalAccountBalance);
+        this.setState({transactionSucceededModalShow: true});
+    }
+
+    async afterTransactionFailed() {
+        this.setState({loading: false});
+        this.setState({transactionFailedModalShow: true});
     }
 
     async onHandleProceed(event) {
         let accountsList = this.state.accountsList;
         console.log("Address 0: " + accountsList[0] + "-------- type of: " + typeof (accountsList[0]));
-        this.setState({loading:true});
+        this.setState({loading: true});
         this.bulkSender.methods.send(ERC777AT_ADDRESS, accountsList, 20, 1).send({from: this.personalAccount})
-            .once('receipt', (receipt) => {
-                for (let i = 0; i < accountsList.length; i++) {
-                    this.erc777AT.methods.balanceOf(accountsList[i]).call().then((balance) => this.makeTransaction(balance, i));
-                }
-            });
+            .then((receipt) => {
+                this.afterTransactionSucceeded();
+            }).catch((error) => {
+                this.afterTransactionFailed();
+        });
     }
 
 
     async loadBlockChainData() {
         this.accounts = await this.web3.eth.getAccounts();
-        console.log("length = " + this.accounts.length);
         this.personalAccount = this.accounts[0];
-        this.setState({personalAccount:this.personalAccount});
+        this.setState({personalAccount: this.personalAccount});
         this.erc777AT = new this.web3.eth.Contract(ERC777AT_ABI, ERC777AT_ADDRESS);
         this.bulkSender = new this.web3.eth.Contract(BULKSENDER_ABI, BULKSENDER_ADDRESS);
         console.log("Personal Account " + this.personalAccount);
         const balance = await this.erc777AT.methods.balanceOf(this.personalAccount).call();
+        this.setState({personalAccountBalance: balance});
         console.log("The balance is : " + balance);
     }
 
@@ -200,14 +258,18 @@ class App extends Component {
                                           onSubmit={event => this.onHandleSubmit(event)}
                                           input={this.state.input}/>
                             <AccountsList accounts={this.state.accountsList}
-                                          onClick={index => this.onHandleRemoveAccount(index)}
-                                          isAccount={this.state.isValidInput}/>
+                                          onClick={index => this.onHandleRemoveAccount(index)}/>
                             <ExtractCSV onClick={event => this.onHandleExtractCSV()}/>
                             <Proceed onClick={event => this.onHandleProceed(event)}/>
                         </main>
                     </div>
-                    <NotValidAccountModal show={this.state.modalShow}
-                                          onHide={() => this.setState({modalShow: false})}/>
+                    <InvalidAccountModal show={this.state.invalidAccountModalShow}
+                                         onHide={() => this.setState({invalidAccountModalShow: false})}/>
+                    <TransactionSucceededModal show={this.state.transactionSucceededModalShow}
+                                               onHide={() => this.setState({transactionSucceededModalShow: false})}
+                                               balance={this.state.personalAccountBalance}/>
+                    <TransactionFailedModal show={this.state.transactionFailedModalShow}
+                                            onHide={() => this.setState({transactionFailedModalShow: false})}/>
                 </div> : <Loading/>
         );
     }
