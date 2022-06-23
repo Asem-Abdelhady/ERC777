@@ -36,7 +36,7 @@ function EnterAmountToSendModal(props) {
                     Close
                 </Button>
 
-                <Button variant="primary" onClick={props.onSendTokens} disabled={false}>
+                <Button variant="primary" onClick={props.onSendTokens} disabled={props.isTokensAmountEmpty}>
                     Send tokens
                 </Button>
             </Modal.Footer>
@@ -86,7 +86,7 @@ function TransactionFailedModal(props) {
             </Modal.Header>
             <Modal.Body>
                 <p>
-                    The transaction is either rejected or failed to be mined, please try again.
+                    The transaction is {props.transactionFailedStatus}.
                 </p>
             </Modal.Body>
             <Modal.Footer>
@@ -231,6 +231,7 @@ class App extends Component {
             personalAccountBalance: 0,
             tokensAmountToSend: 0,
             isTokensAmountEmpty: true,
+            transactionFailedStatus: '',
             loading: false,
         };
     }
@@ -301,11 +302,16 @@ class App extends Component {
         this.bulkSender.methods.send(ERC777AT_ADDRESS, accountsList, amountToSendToContract, 1).send({from: this.personalAccount})
             .then((receipt) => {
                 this.afterTransactionSucceeded();
+                this.setState({isTokensAmountEmpty: true})
             }).catch((error) => {
             this.setState({loading: false});
             if (error.code === -32603) {
                 this.setState({notEnoughTokensModalShow: true})
+            } else if (error.code === 4001) {
+                this.setState({transactionFailedStatus: 'rejected from the user'})
+                this.afterTransactionFailed();
             } else {
+                this.setState({transactionFailedStatus: 'failed to be mined'})
                 this.afterTransactionFailed();
             }
         });
@@ -313,7 +319,7 @@ class App extends Component {
 
     onHandleTokensAmountInput(event) {
         const tokensAmountInput = event.target.value;
-        (tokensAmountInput === '') ? this.setState({isTokensAmountEmpty: false}) : this.setState({isTokensAmountEmpty: true});
+        (tokensAmountInput === '') ? this.setState({isTokensAmountEmpty: true}) : this.setState({isTokensAmountEmpty: false});
         this.setState({tokensAmountToSend: tokensAmountInput});
     }
 
@@ -358,7 +364,8 @@ class App extends Component {
                                                onHide={() => this.setState({transactionSucceededModalShow: false})}
                                                balance={this.state.personalAccountBalance}/>
                     <TransactionFailedModal show={this.state.transactionFailedModalShow}
-                                            onHide={() => this.setState({transactionFailedModalShow: false})}/>
+                                            onHide={() => this.setState({transactionFailedModalShow: false})}
+                                            transactionFailedStatus={this.state.transactionFailedStatus}/>
                     <EnterAmountToSendModal show={this.state.tokensAmountToSendModalShow}
                                             onHide={() => this.setState({tokensAmountToSendModalShow: false})}
                                             onSendTokens={event => this.onHandleSendTokens(event)}
