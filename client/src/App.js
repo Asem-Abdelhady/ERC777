@@ -3,7 +3,47 @@ import React, {Component} from "react";
 import Web3 from "web3";
 import {BULKSENDER_ABI, BULKSENDER_ADDRESS, ERC777AT_ABI, ERC777AT_ADDRESS} from "./config";
 import shikamaru from './loading.jpg'
-import {Button, Modal} from "react-bootstrap";
+import {Button, Form, Modal} from "react-bootstrap";
+
+
+function EnterAmountToSendModal(props) {
+    return (
+        <Modal
+            {...props}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+        >
+            <Modal.Header closeButton>
+                <Modal.Title id="contained-modal-title-vcenter">
+                    Please enter the amount you want to send to every address
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+                    <Form.Label>Amount: </Form.Label>
+                    <Form.Control
+                        type="number"
+                        min="1"
+                        placeholder="Enter the amount"
+                        autoFocus
+                        onChange={props.onChange}
+                    />
+                </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={props.onHide}>
+                    Close
+                </Button>
+
+                <Button variant="primary" onClick={props.onSendTokens} disabled={false}>
+                    Send tokens
+                </Button>
+            </Modal.Footer>
+        </Modal>
+
+    );
+}
 
 
 function TransactionSucceededModal(props) {
@@ -54,6 +94,31 @@ function TransactionFailedModal(props) {
             </Modal.Footer>
         </Modal>
     );
+}
+
+function NotEnoughTokensModal(props) {
+    return (
+        <Modal
+            {...props}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+        >
+            <Modal.Header closeButton>
+                <Modal.Title id="contained-modal-title-vcenter">
+                    Not enough tokens!
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>
+                    There are no enough AT tokens in the account to make the transaction.
+                </p>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button onClick={props.onHide}>Close</Button>
+            </Modal.Footer>
+        </Modal>
+    )
 }
 
 function InvalidAccountModal(props) {
@@ -161,8 +226,12 @@ class App extends Component {
             invalidAccountModalShow: false,
             transactionFailedModalShow: false,
             transactionSucceededModalShow: false,
+            tokensAmountToSendModalShow: false,
+            notEnoughTokensModalShow: false,
             personalAccountBalance: 0,
-            loading: false
+            tokensAmountToSend: 0,
+            isTokensAmountEmpty: true,
+            loading: false,
         };
     }
 
@@ -181,7 +250,6 @@ class App extends Component {
 
     onHandleInput(event) {
         this.setState({input: event.target.value});
-        console.log("input state: " + this.state.input);
     }
 
     onHandleSubmit(event) {
@@ -206,9 +274,10 @@ class App extends Component {
         const emptyAccountsList = [];
         this.setState({accountsList: emptyAccountsList});
         this.setState({loading: false});
-        const balance = await this.erc777AT.methods.balanceOf(this.personalAccount).call();
+        let balance = await this.erc777AT.methods.balanceOf(this.personalAccount).call();
+        balance = this.web3.utils.toBN(balance);
+        balance = balance.div(this.gran).toNumber();
         this.setState({personalAccountBalance: balance});
-        console.log("Personal account balance: " + this.state.personalAccountBalance);
         this.setState({transactionSucceededModalShow: true});
     }
 
@@ -218,28 +287,46 @@ class App extends Component {
     }
 
     async onHandleProceed(event) {
-        let accountsList = this.state.accountsList;
-        console.log("Address 0: " + accountsList[0] + "-------- type of: " + typeof (accountsList[0]));
+        this.setState({tokensAmountToSendModalShow: true});
+    }
+
+    async onHandleSendTokens(event) {
+        this.setState({tokensAmountToSendModalShow: false});
         this.setState({loading: true});
-        this.bulkSender.methods.send(ERC777AT_ADDRESS, accountsList, 20, 1).send({from: this.personalAccount})
+        let accountsList = this.state.accountsList;
+        const amountToSendFromUser = this.web3.utils.toBN(this.state.tokensAmountToSend);
+        const amountToSendToContract = this.gran.mul(amountToSendFromUser);
+
+        this.setState({loading: true});
+        this.bulkSender.methods.send(ERC777AT_ADDRESS, accountsList, amountToSendToContract, 1).send({from: this.personalAccount})
             .then((receipt) => {
                 this.afterTransactionSucceeded();
             }).catch((error) => {
+            this.setState({loading: false});
+            if (error.code === -32603) {
+                this.setState({notEnoughTokensModalShow: true})
+            } else {
                 this.afterTransactionFailed();
+            }
         });
+    }
+
+    onHandleTokensAmountInput(event) {
+        const tokensAmountInput = event.target.value;
+        (tokensAmountInput === '') ? this.setState({isTokensAmountEmpty: false}) : this.setState({isTokensAmountEmpty: true});
+        this.setState({tokensAmountToSend: tokensAmountInput});
     }
 
 
     async loadBlockChainData() {
         this.accounts = await this.web3.eth.getAccounts();
         this.personalAccount = this.accounts[0];
+        this.gran = this.web3.utils.toBN(10 ** 18);
         this.setState({personalAccount: this.personalAccount});
         this.erc777AT = new this.web3.eth.Contract(ERC777AT_ABI, ERC777AT_ADDRESS);
         this.bulkSender = new this.web3.eth.Contract(BULKSENDER_ABI, BULKSENDER_ADDRESS);
-        console.log("Personal Account " + this.personalAccount);
         const balance = await this.erc777AT.methods.balanceOf(this.personalAccount).call();
         this.setState({personalAccountBalance: balance});
-        console.log("The balance is : " + balance);
     }
 
     render() {
@@ -265,11 +352,18 @@ class App extends Component {
                     </div>
                     <InvalidAccountModal show={this.state.invalidAccountModalShow}
                                          onHide={() => this.setState({invalidAccountModalShow: false})}/>
+                    <NotEnoughTokensModal show={this.state.notEnoughTokensModalShow}
+                                          onHide={() => this.setState({notEnoughTokensModalShow: false})}/>
                     <TransactionSucceededModal show={this.state.transactionSucceededModalShow}
                                                onHide={() => this.setState({transactionSucceededModalShow: false})}
                                                balance={this.state.personalAccountBalance}/>
                     <TransactionFailedModal show={this.state.transactionFailedModalShow}
                                             onHide={() => this.setState({transactionFailedModalShow: false})}/>
+                    <EnterAmountToSendModal show={this.state.tokensAmountToSendModalShow}
+                                            onHide={() => this.setState({tokensAmountToSendModalShow: false})}
+                                            onSendTokens={event => this.onHandleSendTokens(event)}
+                                            onChange={event => this.onHandleTokensAmountInput(event)}
+                                            isTokensAmountEmpty={this.state.isTokensAmountEmpty}/>
                 </div> : <Loading/>
         );
     }

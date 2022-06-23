@@ -1,8 +1,11 @@
-const { web3 } = require("@openzeppelin/test-helpers/src/setup")
-
+const Web3 = require("web3");
 const Erc777AT = artifacts.require("./ERC777AT.sol")
 const StaticSale = artifacts.require("./StaticSale.sol")
 
+const ganache = require("ganache");
+
+const web3 = new Web3(ganache.provider());
+const gran = web3.utils.toBN(10**18)
 
 contract("StaticSale", (accounts) =>{
     before(async()=>{
@@ -34,7 +37,7 @@ contract("StaticSale", (accounts) =>{
         const account0Balance = await this.erc777AT.balanceOf(accounts[0])
         const account1Balance = await this.erc777AT.balanceOf(accounts[1])
 
-        assert.equal(account0Balance.toNumber(), 9998)
-        assert.equal(account1Balance.toNumber(), 2)
+        assert.equal(web3.utils.toBN(account0Balance).div(gran), 9998)
+        assert.equal(web3.utils.toBN(account1Balance).div(gran), 2)
     })
 })

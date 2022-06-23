@@ -52,9 +52,9 @@ contract StaticSale {
      */
     function preSend(IERC777 _token, address _holder) internal view returns (uint256) {
         require(pricePerToken[address(_token)][_holder] != 0, "not for sale");
-        uint256 amount = msg.value.mul(1).div(pricePerToken[address(_token)][_holder]);
+        uint256 amount = msg.value.mul(1000000000000000000).div(pricePerToken[address(_token)][_holder]);
         require(amount > _token.granularity(), "not enough ether paid");
-        uint256 value = amount.mul(pricePerToken[address(_token)][_holder]).div(1);
+        uint256 value = amount.mul(pricePerToken[address(_token)][_holder]).div(1000000000000000000);
         require(value == msg.value, "non-integer number of tokens purchased");
         return amount;
     }
