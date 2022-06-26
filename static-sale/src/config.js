@@ -1,6 +1,5 @@
 export const ERC777AT_ADDRESS = '0xA03Bc0090fc44D13d75314c81B6b809a613EB8a0'
-export const BULKSENDER_ADDRESS = '0xD70F288fB475B7671eFc5c614072f3C815eCd89d'
-
+export const STATICSALE_ADDRESS='0x6F24E444188D57E5CdC9494f7A43361331933117'
 export const ERC777AT_ABI = [
     {
         "inputs": [
@@ -583,7 +582,32 @@ export const ERC777AT_ABI = [
         "type": "function"
     }
 ]
-export const BULKSENDER_ABI = [
+export const STATICSALE_API= [
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "holder",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "pricePerToken",
+                "type": "uint256"
+            }
+        ],
+        "name": "PricePerToken",
+        "type": "event"
+    },
     {
         "inputs": [
             {
@@ -592,22 +616,12 @@ export const BULKSENDER_ABI = [
                 "type": "address"
             },
             {
-                "internalType": "address[]",
-                "name": "_recipients",
-                "type": "address[]"
-            },
-            {
                 "internalType": "uint256",
-                "name": "_amount",
+                "name": "_pricePerToken",
                 "type": "uint256"
-            },
-            {
-                "internalType": "bytes",
-                "name": "_data",
-                "type": "bytes"
             }
         ],
-        "name": "send",
+        "name": "setPricePerToken",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -620,24 +634,40 @@ export const BULKSENDER_ABI = [
                 "type": "address"
             },
             {
-                "internalType": "address[]",
-                "name": "_recipients",
-                "type": "address[]"
-            },
-            {
-                "internalType": "uint256[]",
-                "name": "_amounts",
-                "type": "uint256[]"
-            },
-            {
-                "internalType": "bytes",
-                "name": "_data",
-                "type": "bytes"
+                "internalType": "address",
+                "name": "_holder",
+                "type": "address"
             }
         ],
-        "name": "sendAmounts",
+        "name": "getPricePerToken",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC777",
+                "name": "_token",
+                "type": "address"
+            },
+            {
+                "internalType": "address payable",
+                "name": "_holder",
+                "type": "address"
+            }
+        ],
+        "name": "send",
         "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "stateMutability": "payable",
+        "type": "function",
+        "payable": true
     }
 ]

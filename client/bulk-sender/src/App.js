@@ -124,7 +124,6 @@ function NotEnoughTokensModal(props) {
 function InvalidAccountModal(props) {
     return (
         <Modal
-            {...props}
             size="lg"
             aria-labelledby="contained-modal-title-vcenter"
             centered
