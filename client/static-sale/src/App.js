@@ -7,18 +7,23 @@ import AmountToBuyText from "./AmountToBuyText";
 import {ERC777AT_ABI, ERC777AT_ADDRESS, STATICSALE_ADDRESS, STATICSALE_API} from "./config";
 import SetPriceForm from "./SetPriceForm";
 import TokensPurchaseConfirmationModal from "./Modals/TokensPurchaseConfirmationModal";
+import NotEnoughEthersModal from "./Modals/NotEnoughEthersModal";
+import TransactionSucceededModal from "./Modals/TransactionSucceededModal";
 
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
             personalAccount: this.personalAccount,
-            personalAccountBalance: this.balance,
+            personalAccountTokensBalance: 0,
+            personalAccountEthersBalance: 0,
             loading: false,
-            tokensAmount: 0,
+            tokensAmount: '',
             tokenPriceFromBlockChain: 0,
             tokensToBePurchasedPrice: 0,
             purchaseConfirmationModalShow: false,
+            NotEnoughEthersModalShow: false,
+            transactionSucceededModalShow: false
         };
     }
 
@@ -27,7 +32,8 @@ class App extends Component {
         this.loadBlockChainData().then((tokenPrice) => {
             this.setState({tokenPriceFromBlockChain: tokenPrice});
             this.setState({personalAccount: this.personalAccount});
-            this.setState({personalAccountBalance: this.balance});
+            this.setState({personalAccountBalance: this.tokensBalance});
+            this.setState({personalAccountEthersBalance: this.ethersBalance});
         })
     }
 
@@ -38,8 +44,10 @@ class App extends Component {
         this.gran = this.web3.utils.toBN(10 ** 18);
         this.erc777AT = new this.web3.eth.Contract(ERC777AT_ABI, ERC777AT_ADDRESS);
         this.staicSale = new this.web3.eth.Contract(STATICSALE_API, STATICSALE_ADDRESS);
-        this.balance = await this.erc777AT.methods.balanceOf('0x0e3d412f9C6E9aA361C9615dAdEfbBD2C27eBa5f').call();
-        return await this.staicSale.methods.getPricePerToken(ERC777AT_ADDRESS, this.personalAccount).call();
+        this.tokensBalance = await this.erc777AT.methods.balanceOf('0x0e3d412f9C6E9aA361C9615dAdEfbBD2C27eBa5f').call();
+        this.weiBalance = await this.web3.eth.getBalance(this.personalAccount);
+        this.ethersBalance = this.web3.utils.fromWei(this.weiBalance, 'ether');
+        return await this.staicSale.methods.getPricePerToken(ERC777AT_ADDRESS, '0x0e3d412f9C6E9aA361C9615dAdEfbBD2C27eBa5f').call();
 
     }
 
@@ -52,18 +60,19 @@ class App extends Component {
         const tokensPrice = this.state.tokensAmount * this.state.tokenPriceFromBlockChain;
         this.setState({tokensToBePurchasedPrice: tokensPrice});
         this.setState({purchaseConfirmationModalShow: true});
+        this.setState({tokensAmount:''});
     }
 
     handlePriceChange(event) {
         this.setState({tokenPriceFromHolderInput: event.target.value});
-
     }
 
     async handlePriceSet(event) {
         event.preventDefault();
-        console.log("Seeting price");
+        console.log("Setting price");
         this.setState({loading: true});
-        this.staicSale.methods.setPricePerToken(ERC777AT_ADDRESS, this.state.tokenPriceFromHolderInput).send({from: this.accounts[0]})
+        const tokenPrice = this.state.tokenPriceFromHolderInput;
+        this.staicSale.methods.setPricePerToken(ERC777AT_ADDRESS, tokenPrice).send({from: this.state.personalAccount})
             .then(receipt => {
                 console.log("Set correctly!!");
             }).catch(error => {
@@ -72,13 +81,39 @@ class App extends Component {
         this.setState({loading: false});
     }
 
-    async handlePurchase(event) {
-        this.setState({purchaseConfirmationModalShow: false});
-        this.setState({loading: true});
-        this.staicSale.methods.send(ERC777AT_ADDRESS,'0x0e3d412f9C6E9aA361C9615dAdEfbBD2C27eBa5f').send({from:this.state.personalAccount, value:this.state.tokensToBePurchasedPrice}
-        );
-
+    async afterTransactionSucceeded() {
         this.setState({loading: false});
+        let balance = await this.erc777AT.methods.balanceOf(this.personalAccount).call();
+        balance = this.web3.utils.toBN(balance);
+        balance = balance.div(this.gran).toNumber();
+        this.setState({personalAccountTokensBalance: balance});
+        this.setState({transactionSucceededModalShow: true});
+
+    }
+
+    async handlePurchase(event) {
+        console.log("Tokens to be purchased price: " +this.state.tokensToBePurchasedPrice);
+        console.log("Account balance: " + this.state.personalAccountEthersBalance);
+        this.setState({purchaseConfirmationModalShow: false});
+        if (this.state.tokensToBePurchasedPrice > this.state.personalAccountEthersBalance) {
+            this.setState({NotEnoughEthersModalShow: true});
+        } else {
+            this.setState({loading: true});
+            const priceFromUser = this.web3.utils.toBN(this.state.tokensToBePurchasedPrice);
+            const priceInEther = this.gran.mul(priceFromUser);
+            this.staicSale.methods.send(ERC777AT_ADDRESS, '0x0e3d412f9C6E9aA361C9615dAdEfbBD2C27eBa5f').send({
+                from: this.state.personalAccount,
+                value: priceInEther
+            }).then(receipt => {
+                this.afterTransactionSucceeded();
+
+            }).catch(error => {
+
+            })
+
+            this.setState({loading: false});
+        }
+
     }
 
     render() {
@@ -97,7 +132,8 @@ class App extends Component {
                         <main style={{margin: "auto", marginTop: "120px", width: "500px"}}>
                             <AmountToBuyText tokenPrice={this.state.tokenPriceFromBlockChain}/>
                             <BuyATForm onSubmit={(event) => this.handleBuy(event)}
-                                       onChange={event => this.handleAmountChange(event)}/>
+                                       onChange={event => this.handleAmountChange(event)}
+                                       input={this.state.tokensAmount}/>
                             <SetPriceForm onSubmit={(event) => this.handlePriceSet(event)}
                                           onChange={event => this.handlePriceChange(event)}/>
                         </main>
@@ -108,6 +144,11 @@ class App extends Component {
                         buyTokens={(event) => this.handlePurchase(event)}
                         tokensNumber={this.state.tokensAmount}
                         tokensPrice={this.state.tokensToBePurchasedPrice}/>
+                    <NotEnoughEthersModal show={this.state.NotEnoughEthersModalShow}
+                                          onHide={() => this.setState({NotEnoughEthersModalShow: false})}/>
+                    <TransactionSucceededModal show={this.state.transactionSucceededModalShow}
+                                               onHide={() => this.setState({transactionSucceededModalShow: false})}
+                                               balance={this.state.personalAccountTokensBalance}/>
                 </div> :
                 <Loading/>
         );
