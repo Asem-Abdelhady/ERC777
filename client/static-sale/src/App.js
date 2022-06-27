@@ -5,10 +5,10 @@ import Loading from "./Loading";
 import BuyATForm from "./BuyATForm";
 import AmountToBuyText from "./AmountToBuyText";
 import {ERC777AT_ABI, ERC777AT_ADDRESS, STATICSALE_ADDRESS, STATICSALE_API} from "./config";
-import SetPriceForm from "./SetPriceForm";
 import TokensPurchaseConfirmationModal from "./Modals/TokensPurchaseConfirmationModal";
 import NotEnoughEthersModal from "./Modals/NotEnoughEthersModal";
 import TransactionSucceededModal from "./Modals/TransactionSucceededModal";
+import TransactionFailedModal from "./Modals/TransactionFailedModal";
 
 class App extends Component {
     constructor(props) {
@@ -19,11 +19,14 @@ class App extends Component {
             personalAccountEthersBalance: 0,
             loading: false,
             tokensAmount: '',
+            isAmountEmpty: true,
             tokenPriceFromBlockChain: 0,
             tokensToBePurchasedPrice: 0,
             purchaseConfirmationModalShow: false,
             NotEnoughEthersModalShow: false,
-            transactionSucceededModalShow: false
+            transactionSucceededModalShow: false,
+            transactionFailedModalShow: false,
+            transactionFailedStatus: ''
         };
     }
 
@@ -52,6 +55,9 @@ class App extends Component {
     }
 
     handleAmountChange(event) {
+        let input = event.target.value;
+        if (input === '') this.setState({isAmountEmpty: true})
+        else this.setState({isAmountEmpty: false});
         this.setState({tokensAmount: event.target.value});
     }
 
@@ -60,26 +66,10 @@ class App extends Component {
         const tokensPrice = this.state.tokensAmount * this.state.tokenPriceFromBlockChain;
         this.setState({tokensToBePurchasedPrice: tokensPrice});
         this.setState({purchaseConfirmationModalShow: true});
-        this.setState({tokensAmount:''});
+        this.setState({tokensAmount: ''});
+        this.setState({isAmountEmpty: true});
     }
 
-    handlePriceChange(event) {
-        this.setState({tokenPriceFromHolderInput: event.target.value});
-    }
-
-    async handlePriceSet(event) {
-        event.preventDefault();
-        console.log("Setting price");
-        this.setState({loading: true});
-        const tokenPrice = this.state.tokenPriceFromHolderInput;
-        this.staicSale.methods.setPricePerToken(ERC777AT_ADDRESS, tokenPrice).send({from: this.state.personalAccount})
-            .then(receipt => {
-                console.log("Set correctly!!");
-            }).catch(error => {
-            console.log("failed to set!");
-        })
-        this.setState({loading: false});
-    }
 
     async afterTransactionSucceeded() {
         this.setState({loading: false});
@@ -92,7 +82,7 @@ class App extends Component {
     }
 
     async handlePurchase(event) {
-        console.log("Tokens to be purchased price: " +this.state.tokensToBePurchasedPrice);
+        console.log("Tokens to be purchased price: " + this.state.tokensToBePurchasedPrice);
         console.log("Account balance: " + this.state.personalAccountEthersBalance);
         this.setState({purchaseConfirmationModalShow: false});
         if (this.state.tokensToBePurchasedPrice > this.state.personalAccountEthersBalance) {
@@ -108,11 +98,17 @@ class App extends Component {
                 this.afterTransactionSucceeded();
 
             }).catch(error => {
+                if (error.code === 4001) {
+                    console.log("from error code");
+                    this.setState({transactionFailedStatus: 'rejected from the user'});
+                    this.setState({transactionFailedModalShow: true});
+                }
 
             })
 
-            this.setState({loading: false});
         }
+
+        this.setState({loading: false});
 
     }
 
@@ -133,9 +129,8 @@ class App extends Component {
                             <AmountToBuyText tokenPrice={this.state.tokenPriceFromBlockChain}/>
                             <BuyATForm onSubmit={(event) => this.handleBuy(event)}
                                        onChange={event => this.handleAmountChange(event)}
-                                       input={this.state.tokensAmount}/>
-                            <SetPriceForm onSubmit={(event) => this.handlePriceSet(event)}
-                                          onChange={event => this.handlePriceChange(event)}/>
+                                       input={this.state.tokensAmount}
+                                       isEmpty={this.state.isAmountEmpty}/>
                         </main>
                     </div>
                     <TokensPurchaseConfirmationModal
@@ -146,6 +141,9 @@ class App extends Component {
                         tokensPrice={this.state.tokensToBePurchasedPrice}/>
                     <NotEnoughEthersModal show={this.state.NotEnoughEthersModalShow}
                                           onHide={() => this.setState({NotEnoughEthersModalShow: false})}/>
+                    <TransactionFailedModal show={this.state.transactionFailedModalShow}
+                                            onHide={() => this.setState({transactionFailedModalShow: false})}
+                                            transactionFailedStatus={this.state.transactionFailedStatus}/>
                     <TransactionSucceededModal show={this.state.transactionSucceededModalShow}
                                                onHide={() => this.setState({transactionSucceededModalShow: false})}
                                                balance={this.state.personalAccountTokensBalance}/>

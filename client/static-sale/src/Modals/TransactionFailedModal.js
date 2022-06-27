@@ -1,7 +1,6 @@
-import React from "react";
 import {Button, Modal} from "react-bootstrap";
 
-function NotEnoughEthersModal(props) {
+function TransactionFailedModal(props) {
     return (
         <Modal
             {...props}
@@ -11,12 +10,12 @@ function NotEnoughEthersModal(props) {
         >
             <Modal.Header closeButton>
                 <Modal.Title id="contained-modal-title-vcenter">
-                    Not enough ether!
+                    Transaction failed!
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <p>
-                    Your account balance cannot support the purchase transaction!
+                    The transaction is {props.transactionFailedStatus}.
                 </p>
             </Modal.Body>
             <Modal.Footer>
@@ -25,4 +24,5 @@ function NotEnoughEthersModal(props) {
         </Modal>
     );
 }
-export default NotEnoughEthersModal;
+
+export default TransactionFailedModal;
