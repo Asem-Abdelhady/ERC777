@@ -47,10 +47,10 @@ class App extends Component {
         this.gran = this.web3.utils.toBN(10 ** 18);
         this.erc777AT = new this.web3.eth.Contract(ERC777AT_ABI, ERC777AT_ADDRESS);
         this.staicSale = new this.web3.eth.Contract(STATICSALE_API, STATICSALE_ADDRESS);
-        this.tokensBalance = await this.erc777AT.methods.balanceOf('0x0e3d412f9C6E9aA361C9615dAdEfbBD2C27eBa5f').call();
+        this.tokensBalance = await this.erc777AT.methods.balanceOf('0x006510FA9a9b5b0566209347200d3300081342f3').call();
         this.weiBalance = await this.web3.eth.getBalance(this.personalAccount);
         this.ethersBalance = this.web3.utils.fromWei(this.weiBalance, 'ether');
-        return await this.staicSale.methods.getPricePerToken(ERC777AT_ADDRESS, '0x0e3d412f9C6E9aA361C9615dAdEfbBD2C27eBa5f').call();
+        return await this.staicSale.methods.getPricePerToken(ERC777AT_ADDRESS, '0x006510FA9a9b5b0566209347200d3300081342f3').call();
 
     }
 
