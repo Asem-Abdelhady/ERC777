@@ -168,7 +168,7 @@ class AccountInput extends Component {
                     <input type="text" className="form-control" placeholder="Enter account"
                            aria-label="Enter account" aria-describedby="button-addon2" id="account-input"
                            onChange={this.props.onChange} value={this.props.input}></input>
-                    <button className="btn btn-outline-primary" type="submit" id="button-addon2">Save
+                    <button className="btn btn-outline-primary" type="submit" id="button-addon2"  style={{marginLeft: "12px"}}>Save
                     </button>
                 </div>
             </form>
