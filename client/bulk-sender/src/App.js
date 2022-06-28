@@ -4,6 +4,7 @@ import Web3 from "web3";
 import {BULKSENDER_ABI, BULKSENDER_ADDRESS, ERC777AT_ABI, ERC777AT_ADDRESS} from "./config";
 import shikamaru from './loading.jpg'
 import {Button, Form, Modal} from "react-bootstrap";
+import detectEthereumProvider from "@metamask/detect-provider";
 
 
 function EnterAmountToSendModal(props) {
@@ -168,7 +169,8 @@ class AccountInput extends Component {
                     <input type="text" className="form-control" placeholder="Enter account"
                            aria-label="Enter account" aria-describedby="button-addon2" id="account-input"
                            onChange={this.props.onChange} value={this.props.input}></input>
-                    <button className="btn btn-outline-primary" type="submit" id="button-addon2"  style={{marginLeft: "12px"}}>Save
+                    <button className="btn btn-outline-primary" type="submit" id="button-addon2"
+                            style={{marginLeft: "12px"}}>Save
                     </button>
                 </div>
             </form>
@@ -236,7 +238,6 @@ class App extends Component {
     }
 
     componentDidMount() {
-        this.web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
         this.loadBlockChainData();
     }
 
@@ -324,7 +325,13 @@ class App extends Component {
 
 
     async loadBlockChainData() {
-        this.accounts = await this.web3.eth.getAccounts();
+        const provider = await detectEthereumProvider();
+        if (provider) {
+            this.web3 = new Web3(provider);
+            this.accounts = await window.ethereum.request({method: 'eth_requestAccounts'})
+        } else {
+            alert('Please install MetaMask!');
+        }
         this.personalAccount = this.accounts[0];
         this.gran = this.web3.utils.toBN(10 ** 18);
         this.setState({personalAccount: this.personalAccount});
