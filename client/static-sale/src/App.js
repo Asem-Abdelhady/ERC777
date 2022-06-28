@@ -9,6 +9,7 @@ import TokensPurchaseConfirmationModal from "./Modals/TokensPurchaseConfirmation
 import NotEnoughEthersModal from "./Modals/NotEnoughEthersModal";
 import TransactionSucceededModal from "./Modals/TransactionSucceededModal";
 import TransactionFailedModal from "./Modals/TransactionFailedModal";
+import detectEthereumProvider from "@metamask/detect-provider";
 
 class App extends Component {
     constructor(props) {
@@ -31,7 +32,6 @@ class App extends Component {
     }
 
     componentDidMount() {
-        this.web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
         this.loadBlockChainData().then((tokenPrice) => {
             this.setState({tokenPriceFromBlockChain: tokenPrice});
             this.setState({personalAccount: this.personalAccount});
@@ -42,7 +42,13 @@ class App extends Component {
 
 
     async loadBlockChainData() {
-        this.accounts = await this.web3.eth.getAccounts();
+        const provider = await detectEthereumProvider();
+        if (provider) {
+            this.web3 = new Web3(provider);
+            this.accounts = await window.ethereum.request({method: 'eth_requestAccounts'})
+        } else {
+            alert('Please install MetaMask!');
+        }
         this.personalAccount = this.accounts[0];
         this.gran = this.web3.utils.toBN(10 ** 18);
         this.erc777AT = new this.web3.eth.Contract(ERC777AT_ABI, ERC777AT_ADDRESS);
