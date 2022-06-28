@@ -82,8 +82,6 @@ class App extends Component {
     }
 
     async handlePurchase(event) {
-        console.log("Tokens to be purchased price: " + this.state.tokensToBePurchasedPrice);
-        console.log("Account balance: " + this.state.personalAccountEthersBalance);
         this.setState({purchaseConfirmationModalShow: false});
         if (this.state.tokensToBePurchasedPrice > this.state.personalAccountEthersBalance) {
             this.setState({NotEnoughEthersModalShow: true});
@@ -99,7 +97,6 @@ class App extends Component {
 
             }).catch(error => {
                 if (error.code === 4001) {
-                    console.log("from error code");
                     this.setState({transactionFailedStatus: 'rejected from the user'});
                     this.setState({transactionFailedModalShow: true});
                 }

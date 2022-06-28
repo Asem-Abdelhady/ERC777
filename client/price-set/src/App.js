@@ -6,6 +6,10 @@ import {ERC777AT_ABI, ERC777AT_ADDRESS, STATICSALE_ADDRESS, STATICSALE_API} from
 import Web3 from "web3";
 import Loading from "./Loading";
 import PriceSetConfirmationModal from "./Modals/PriceSetConfirmationModal";
+import TransactionFailedModal from "./Modals/TransactionFailedModal";
+import TransactionSucceededModal from "./Modals/TransactionSucceededModal";
+import SameTokenPriceModal from "./Modals/SameTokenPriceModal";
+import NoATModal from "./Modals/NoATModal";
 
 class App extends Component {
     constructor(props) {
@@ -16,6 +20,11 @@ class App extends Component {
             personalAccountEthersBalance: 0,
             tokenPriceFromBlockChain: 0,
             priceSetConfirmationModalShow: false,
+            transactionSucceededModalShow: false,
+            transactionFailedModalShow: false,
+            sameTokenPriceModalShow: false,
+            noATModalShow: false,
+            transactionFailedStatus: '',
             tokenNewPriceInput: '',
             isPriceEmpty: true,
             loading: false
@@ -27,7 +36,7 @@ class App extends Component {
         this.loadBlockChainData().then((tokenPrice) => {
             this.setState({tokenPriceFromBlockChain: tokenPrice});
             this.setState({personalAccount: this.personalAccount});
-            this.setState({personalAccountBalance: this.tokensBalance});
+            this.setState({personalAccountTokensBalance: this.tokensBalance});
             this.setState({personalAccountEthersBalance: this.ethersBalance});
         })
     }
@@ -45,10 +54,18 @@ class App extends Component {
 
     }
 
-    handleSet(event){
+    handleSet(event) {
         event.preventDefault();
-        this.setState({isPriceEmpty:true});
-        this.setState({priceSetConfirmationModalShow: true});
+        this.setState({isPriceEmpty: true});
+        if (this.state.personalAccountTokensBalance.toString() === '0') {
+            this.setState({noATModalShow: true});
+        } else {
+            if (this.state.tokenNewPriceInput === this.state.tokenPriceFromBlockChain) {
+                this.setState({sameTokenPriceModalShow: true});
+            } else {
+                this.setState({priceSetConfirmationModalShow: true});
+            }
+        }
     }
 
     handlePriceChange(event) {
@@ -59,15 +76,20 @@ class App extends Component {
     }
 
     async handleSetPrice(event) {
-        console.log("Setting price");
+        this.setState({priceSetConfirmationModalShow: false});
         this.setState({loading: true});
-        const tokenPrice = this.state.tokenPriceFromHolderInput;
+        let tokenPrice = this.state.tokenNewPriceInput;
+        this.setState({tokenNewPriceInput: ''});
         this.staicSale.methods.setPricePerToken(ERC777AT_ADDRESS, tokenPrice).send({from: this.state.personalAccount})
             .then(receipt => {
-                console.log("Set correctly!!");
+                this.setState({transactionSucceededModalShow: true});
+
             }).catch(error => {
-            console.log("failed to set!");
-        })
+            if (error.code === 4001) {
+                this.setState({transactionFailedStatus: 'rejected from the user'});
+                this.setState({transactionFailedModalShow: true});
+            }
+        });
         this.setState({loading: false});
 
     }
@@ -88,7 +110,7 @@ class App extends Component {
                             <TokenHolderHeadline/>
 
                             <SetPriceForm onSubmit={(event) => this.handleSet(event)}
-                                          onChange={event => this.handlePriceChange(event)}
+                                          onChange={(event) => this.handlePriceChange(event)}
                                           isEmpty={this.state.isPriceEmpty}
                                           input={this.state.tokenNewPriceInput}/>
                         </main>
@@ -98,7 +120,18 @@ class App extends Component {
                                                onHide={() => this.setState({priceSetConfirmationModalShow: false})}
                                                currentPrice={this.state.tokenPriceFromBlockChain}
                                                newPrice={this.state.tokenNewPriceInput}
-                                               setPrice={this.handleSetPrice()}/>
+                                               setPrice={event => this.handleSetPrice(event)}/>
+
+                    <TransactionFailedModal show={this.state.transactionFailedModalShow}
+                                            onHide={() => this.setState({transactionFailedModalShow: false})}
+                                            transactionFailedStatus={this.state.transactionFailedStatus}/>
+                    <TransactionSucceededModal show={this.state.transactionSucceededModalShow}
+                                               onHide={() => this.setState({transactionSucceededModalShow: false})}
+                                               newPrice={this.state.tokenNewPriceInput}/>
+                    <SameTokenPriceModal show={this.state.sameTokenPriceModalShow}
+                                         onHide={() => this.setState({sameTokenPriceModalShow: false})}/>
+                    <NoATModal show={this.state.noATModalShow}
+                               onHide={() => this.setState({noATModalShow: false})}/>
                 </div> :
                 <Loading/>
 
