@@ -305,7 +305,8 @@ class App extends Component {
         this.bulkSender.methods.send(ERC777AT_ADDRESS, accountsList, amountToSendToContract, 1).send({from: this.personalAccount})
             .then((receipt) => {
                 this.afterTransactionSucceeded();
-                this.setState({isTokensAmountEmpty: true})
+                this.setState({isTokensAmountEmpty: true});
+                this.setState({isEmptyList:true});
             }).catch((error) => {
             this.setState({loading: false});
             if (error.code === -32603) {
