@@ -21,8 +21,10 @@ class App extends Component {
             loading: false,
             tokensAmount: '',
             isAmountEmpty: true,
-            tokenPriceFromBlockChain: 0,
-            tokensToBePurchasedPrice: 0,
+            tokenPriceFromBlockChainInEther: 0,
+            tokenPriceFromBlockChainInWei: 0,
+            tokensToBePurchasedPriceInWei: 0,
+            tokensToBePurchasedPriceInEther: 0,
             purchaseConfirmationModalShow: false,
             NotEnoughEthersModalShow: false,
             transactionSucceededModalShow: false,
@@ -33,7 +35,8 @@ class App extends Component {
 
     componentDidMount() {
         this.loadBlockChainData().then((tokenPrice) => {
-            this.setState({tokenPriceFromBlockChain: tokenPrice});
+            this.setState({tokenPriceFromBlockChainInEther: this.web3.utils.fromWei(`${tokenPrice}`, 'ether')});
+            this.setState({tokenPriceFromBlockChainInWei: tokenPrice});
             this.setState({personalAccount: this.personalAccount});
             this.setState({personalAccountBalance: this.tokensBalance});
             this.setState({personalAccountEthersBalance: this.ethersBalance});
@@ -61,19 +64,28 @@ class App extends Component {
     }
 
     handleAmountChange(event) {
-        let input = event.target.value;
-        if (input === '') this.setState({isAmountEmpty: true})
-        else this.setState({isAmountEmpty: false});
-        this.setState({tokensAmount: event.target.value});
+
+        let input = parseInt(event.target.value);
+        if (isNaN(input)) {
+            this.setState({isAmountEmpty: true});
+            this.setState({tokensAmount: ''});
+        } else {
+            input = input >= 0 ? input : 1;
+            this.setState({isAmountEmpty: false});
+            this.setState({tokensAmount: input});
+        }
     }
 
     handleBuy(event) {
         event.preventDefault();
-        const tokensPrice = this.state.tokensAmount * this.state.tokenPriceFromBlockChain;
-        this.setState({tokensToBePurchasedPrice: tokensPrice});
+        this.setState({tokensToBePurchasedPriceInWei: this.state.tokensAmount * this.state.tokenPriceFromBlockChainInWei});
+        this.tokensToBePurchasedPriceInWei = this.state.tokensAmount * this.state.tokenPriceFromBlockChainInWei;
+        this.setState({tokensToBePurchasedPriceInEther: this.web3.utils.fromWei(`${this.state.tokensAmount * this.state.tokenPriceFromBlockChainInWei}`, 'ether')});
         this.setState({purchaseConfirmationModalShow: true});
         this.setState({tokensAmount: ''});
         this.setState({isAmountEmpty: true});
+
+
     }
 
 
@@ -88,21 +100,23 @@ class App extends Component {
     }
 
     async handlePurchase(event) {
+        console.log(this.state.tokensToBePurchasedPriceInEther);
+        console.log(this.state.tokensToBePurchasedPriceInWei);
         this.setState({purchaseConfirmationModalShow: false});
-        if (this.state.tokensToBePurchasedPrice > this.state.personalAccountEthersBalance) {
+        if (this.state.tokensToBePurchasedPriceInEther > this.state.personalAccountEthersBalance) {
             this.setState({NotEnoughEthersModalShow: true});
         } else {
             this.setState({loading: true});
-            const priceFromUser = this.web3.utils.toBN(this.state.tokensToBePurchasedPrice);
-            const priceInEther = this.gran.mul(priceFromUser);
-            this.staicSale.methods.send(ERC777AT_ADDRESS, '0x0e3d412f9C6E9aA361C9615dAdEfbBD2C27eBa5f').send({
+            const priceInWei = this.state.tokensToBePurchasedPriceInWei;
+            this.staicSale.methods.send(ERC777AT_ADDRESS, '0x006510FA9a9b5b0566209347200d3300081342f3').send({
                 from: this.state.personalAccount,
-                value: priceInEther
+                value: priceInWei
             }).then(receipt => {
+                this.setState({loading: false});
                 this.afterTransactionSucceeded();
-
             }).catch(error => {
                 if (error.code === 4001) {
+                    this.setState({loading: false});
                     this.setState({transactionFailedStatus: 'rejected from the user'});
                     this.setState({transactionFailedModalShow: true});
                 }
@@ -111,7 +125,6 @@ class App extends Component {
 
         }
 
-        this.setState({loading: false});
 
     }
 
@@ -129,7 +142,7 @@ class App extends Component {
 
                     <div>
                         <main style={{margin: "auto", marginTop: "120px", width: "500px"}}>
-                            <AmountToBuyText tokenPrice={this.state.tokenPriceFromBlockChain}/>
+                            <AmountToBuyText tokenPrice={this.state.tokenPriceFromBlockChainInEther}/>
                             <BuyATForm onSubmit={(event) => this.handleBuy(event)}
                                        onChange={event => this.handleAmountChange(event)}
                                        input={this.state.tokensAmount}
@@ -141,7 +154,7 @@ class App extends Component {
                         onHide={() => this.setState({purchaseConfirmationModalShow: false})}
                         buyTokens={(event) => this.handlePurchase(event)}
                         tokensNumber={this.state.tokensAmount}
-                        tokensPrice={this.state.tokensToBePurchasedPrice}/>
+                        tokensPrice={this.state.tokensToBePurchasedPriceInEther}/>
                     <NotEnoughEthersModal show={this.state.NotEnoughEthersModalShow}
                                           onHide={() => this.setState({NotEnoughEthersModalShow: false})}/>
                     <TransactionFailedModal show={this.state.transactionFailedModalShow}

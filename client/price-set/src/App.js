@@ -27,6 +27,7 @@ class App extends Component {
             noATModalShow: false,
             transactionFailedStatus: '',
             tokenNewPriceInput: '',
+            tokenNewPriceInBlockChain: 0,
             isPriceEmpty: true,
             loading: false
         }
@@ -34,7 +35,7 @@ class App extends Component {
 
     componentDidMount() {
         this.loadBlockChainData().then((tokenPrice) => {
-            this.setState({tokenPriceFromBlockChain: tokenPrice});
+            this.setState({tokenPriceFromBlockChain: this.web3.utils.fromWei(`${tokenPrice}`,'ether')});
             this.setState({personalAccount: this.personalAccount});
             this.setState({personalAccountTokensBalance: this.tokensBalance});
             this.setState({personalAccountEthersBalance: this.ethersBalance});
@@ -75,28 +76,37 @@ class App extends Component {
     }
 
     handlePriceChange(event) {
-        let input = event.target.value;
-        if (input === '') this.setState({isPriceEmpty: true});
-        else this.setState({isPriceEmpty: false});
-        this.setState({tokenNewPriceInput: input});
+        let input = parseFloat(event.target.value);
+        if (isNaN(input)) {
+            this.setState({isPriceEmpty: true});
+            this.setState({tokenNewPriceInput:''});
+        }
+        else{
+            input = input >= 0 ? input : 0.01;
+            this.setState({ tokenNewPriceInput: input });
+            this.setState({isPriceEmpty: false});
+        }
     }
 
     async handleSetPrice(event) {
         this.setState({priceSetConfirmationModalShow: false});
         this.setState({loading: true});
-        let tokenPrice = this.state.tokenNewPriceInput;
+        let tokenPriceInEther = this.state.tokenNewPriceInput;
+        let tokenPriceInWei = this.web3.utils.toWei(`${tokenPriceInEther}`, 'ether');
         this.setState({tokenNewPriceInput: ''});
-        this.staicSale.methods.setPricePerToken(ERC777AT_ADDRESS, tokenPrice).send({from: this.state.personalAccount})
+        this.staicSale.methods.setPricePerToken(ERC777AT_ADDRESS, tokenPriceInWei).send({from: this.state.personalAccount})
             .then(receipt => {
+                this.setState({loading: false});
+                this.setState({tokenNewPriceInBlockChain: tokenPriceInEther})
                 this.setState({transactionSucceededModalShow: true});
 
             }).catch(error => {
             if (error.code === 4001) {
+                this.setState({loading: false});
                 this.setState({transactionFailedStatus: 'rejected from the user'});
                 this.setState({transactionFailedModalShow: true});
             }
         });
-        this.setState({loading: false});
 
     }
 
@@ -133,7 +143,7 @@ class App extends Component {
                                             transactionFailedStatus={this.state.transactionFailedStatus}/>
                     <TransactionSucceededModal show={this.state.transactionSucceededModalShow}
                                                onHide={() => this.setState({transactionSucceededModalShow: false})}
-                                               newPrice={this.state.tokenNewPriceInput}/>
+                                               newPrice={this.state.tokenNewPriceInBlockChain}/>
                     <SameTokenPriceModal show={this.state.sameTokenPriceModalShow}
                                          onHide={() => this.setState({sameTokenPriceModalShow: false})}/>
                     <NoATModal show={this.state.noATModalShow}

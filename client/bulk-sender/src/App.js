@@ -195,7 +195,7 @@ function AccountsList(props) {
 
 function Proceed(props) {
     return (
-        <button className="btn btn-primary" style={{marginLeft: "12px"}} onClick={props.onClick}>PROCEED</button>
+        <button className="btn btn-primary" style={{marginLeft: "12px"}} onClick={props.onClick} disabled={props.isEmptyList}>PROCEED</button>
     )
 }
 
@@ -232,6 +232,7 @@ class App extends Component {
             personalAccountBalance: 0,
             tokensAmountToSend: 0,
             isTokensAmountEmpty: true,
+            isEmptyList: true,
             transactionFailedStatus: '',
             loading: false,
         };
@@ -244,6 +245,7 @@ class App extends Component {
     async onHandleRemoveAccount(accountIndex) {
 
         let accounts = this.state.accountsList.filter((value, index) => index !== accountIndex);
+        if(accounts.length === 0) this.setState({isEmptyList:true});
 
         await this.setState({accountsList: accounts});
 
@@ -262,6 +264,7 @@ class App extends Component {
             let accounts = this.state.accountsList;
             accounts.push(input);
             this.setState({accountsList: accounts});
+            this.setState({isEmptyList:false});
         }
         this.setState({input: ''});
 
@@ -359,7 +362,7 @@ class App extends Component {
                             <AccountsList accounts={this.state.accountsList}
                                           onClick={index => this.onHandleRemoveAccount(index)}/>
                             <ExtractCSV onClick={event => this.onHandleExtractCSV()}/>
-                            <Proceed onClick={event => this.onHandleProceed(event)}/>
+                            <Proceed onClick={event => this.onHandleProceed(event)} isEmptyList={this.state.isEmptyList}/>
                         </main>
                     </div>
                     <InvalidAccountModal show={this.state.invalidAccountModalShow}

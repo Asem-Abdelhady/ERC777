@@ -17,7 +17,7 @@ function TransactionSucceededModal(props) {
             </Modal.Header>
             <Modal.Body>
                 <p>
-                    You made a successful transaction, the price for your AT is now {props.newPrice}.
+                    You made a successful transaction, the price for your AT is now {props.newPrice} ether.
                 </p>
             </Modal.Body>
             <Modal.Footer>

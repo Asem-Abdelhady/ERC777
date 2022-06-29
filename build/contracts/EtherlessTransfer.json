@@ -86,7 +86,8 @@
         }
       ],
       "stateMutability": "pure",
-      "type": "function"
+      "type": "function",
+      "constant": true
     }
   ],
   "metadata": "{\"compiler\":{\"version\":\"0.8.13+commit.abaa5c0e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract IERC777\",\"name\":\"_token\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_holder\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_nonce\",\"type\":\"uint256\"}],\"name\":\"hashForSend\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IERC777\",\"name\":\"_token\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_holder\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_nonce\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"_signature\",\"type\":\"bytes\"}],\"name\":\"send\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"hashForSend(address,address,address,uint256,bytes,uint256)\":{\"params\":{\"_amount\":\"the number of tokens to send\",\"_data\":\"the data field for the operatorSend operation, supplied by the authority\",\"_holder\":\"the holder of the tokens\",\"_nonce\":\"a unique field for a given (_token, _holder, _recipient, _amount, _nonce) supplied by the authority\",\"_recipient\":\"the recipient of the tokens\",\"_token\":\"the address of the token contract\"}},\"send(address,address,address,uint256,bytes,uint256,bytes)\":{\"params\":{\"_amount\":\"the number of tokens to send\",\"_data\":\"the data field for the operatorSend operation, supplied by the authority\",\"_holder\":\"the holder of the tokens\",\"_nonce\":\"a unique field for a given (_token, _holder, _recipient, _amount, _nonce) supplied by the authority\",\"_recipient\":\"the recipient of the tokens\",\"_signature\":\"the signature supplied by the authority\",\"_token\":\"the address of the token contract\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"hashForSend(address,address,address,uint256,bytes,uint256)\":{\"notice\":\"This generates the hash that is signed by the holder to authorise a send.\"},\"send(address,address,address,uint256,bytes,uint256,bytes)\":{\"notice\":\"send tokens from one account to another using the signature as the authority. The signature is created by the holder and signs a hash of the (_token, _holder, _recipient, _amount, _nonce) tuple as created by hashForSend().\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/EtherlessTransfer.sol\":\"EtherlessTransfer\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC777/IERC777.sol\":{\"keccak256\":\"0x093eaf9a4b05adf2bd3730b753f9e1725ed34b80ea4b5f08477ff2f46a188586\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://46e9a9b37e8cb6332ed21a8d3f8a6723d897e4a97db63095424522a80b3cfc15\",\"dweb:/ipfs/QmdHcBPPGKQBnmeaAN3Y6YKUPqwR73RrHTiX5uTr6eVx1M\"]},\"project:/contracts/EtherlessTransfer.sol\":{\"keccak256\":\"0x9b42610143053a6cd951839b1a784f7dd50d8a28cc0e693aa4f48ff1439643a2\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://c94efef4e74d763ea98980141399b4dc64f6b48f90e52a1091f2dce99be660b0\",\"dweb:/ipfs/QmU6jsCJjzq31iY7hpzbVo1JJJWQzZqxRLFkUAkmUKG6Ym\"]}},\"version\":1}",
@@ -12142,9 +12143,23 @@
     "name": "solc",
     "version": "0.8.13+commit.abaa5c0e.Emscripten.clang"
   },
-  "networks": {},
+  "networks": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x21aB857AC373B8C27AE645302954018e3C2cc0CF",
+      "transactionHash": "0x91029c00c0675dbdfd3d0ea47bff49a7e5e5c252b5927f2057bd953d45e81574"
+    },
+    "5777": {
+      "events": {},
+      "links": {},
+      "address": "0x7cA98b01674Aa0a2873725cD4e25C71185c14bbF",
+      "transactionHash": "0x92dd78c2c5c002c23511947b6fec13245f901daca8a82f6ccfe7122db7ce7f2d"
+    }
+  },
   "schemaVersion": "3.4.7",
-  "updatedAt": "2022-06-28T20:00:40.901Z",
+  "updatedAt": "2022-06-29T13:34:52.213Z",
+  "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
     "methods": {

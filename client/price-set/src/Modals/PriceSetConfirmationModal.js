@@ -11,8 +11,8 @@ function PriceSetConfirmationModal(props) {
             <Modal.Header closeButton>
                 <Modal.Title>Price confirmation</Modal.Title>
             </Modal.Header>
-            <Modal.Body>Your current price for AT is {props.currentPrice} are you sure you want to change it
-                to {props.newPrice}</Modal.Body>
+            <Modal.Body>Your current price for AT is {props.currentPrice} ether are you sure you want to change it
+                to {props.newPrice} ether?</Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={props.onHide}>
                     Close
