@@ -4,7 +4,9 @@ ERC777AT is Ethereum ERC777 tokens built with sole purpose of learning the techn
 ## Description
 
 The project basically lets you be a tokens holder of 10000 ERC777AT with the address you used to deploy the [ERC777 contract](https://github.com/Asem-Abdelhady/ERC777-AirDrop/blob/master/contracts/ERC777AT.sol)
-after that, you can obtain the contract address and import the tokens into your favorite wallet: ![Tokens](https://user-images.githubusercontent.com/40506647/176640715-5f1b91fe-2293-426b-98ee-d5f9dc1cb196.png)
+after that, you can obtain the contract address and import the tokens into your favorite wallet:
+
+ ![Tokens](https://user-images.githubusercontent.com/40506647/176640715-5f1b91fe-2293-426b-98ee-d5f9dc1cb196.png)
 
 ### Features
 * ERC777AT operators
